@@ -7,6 +7,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync/atomic"
+	"time"
 
 	"github.com/DataDog/datadog-go/statsd"
 )
@@ -46,12 +48,30 @@ func main() {
 	}
 	defer outconn.Close()
 
-	var stats statsdClient = &statsd.NoOpClient{}
+	var (
+		stats               statsdClient = &statsd.NoOpClient{}
+		inbytes, outbytes   int64
+		inerrors, outerrors int64
+	)
 	if !*nostats {
 		stats, err = statsd.New(*out)
 		if err != nil {
 			log.Printf("Statsd disabled: %v", err)
 			stats = &statsd.NoOpClient{}
+		} else {
+			go func() {
+				tick := time.NewTicker(10 * time.Second)
+				defer tick.Stop()
+				for {
+					select {
+					case <-tick.C:
+						stats.Count("udpfwd.in_bytes", atomic.SwapInt64(&inbytes, 0), nil, 1)
+						stats.Count("udpfwd.out_bytes", atomic.SwapInt64(&outbytes, 0), nil, 1)
+						stats.Count("udpfwd.error", atomic.SwapInt64(&inerrors, 0), []string{"direction:in"}, 1)
+						stats.Count("udpfwd.error", atomic.SwapInt64(&outerrors, 0), []string{"direction:out"}, 1)
+					}
+				}
+			}()
 		}
 	}
 
@@ -59,16 +79,16 @@ func main() {
 	for {
 		nin, err := inconn.Read(buf[0:])
 		if err != nil && err != io.EOF {
-			stats.Count("udpfwd.error", 1, []string{"direction:in"}, 1)
+			atomic.AddInt64(&inerrors, 1)
 			log.Printf("Error reading %d bytes: %v", nin, err)
 		}
-		stats.Count("udpfwd.in_bytes", int64(nin), nil, 1)
+		atomic.AddInt64(&inbytes, 1)
 		nout, err := outconn.Write(buf[:nin])
 		if err != nil {
-			stats.Count("udpfwd.error", 1, []string{"direction:out"}, 1)
+			atomic.AddInt64(&outerrors, 1)
 			log.Printf("Error writing %d bytes: %v", nout, err)
 		}
-		stats.Count("udpfwd.out_bytes", int64(nout), nil, 1)
+		atomic.AddInt64(&outbytes, 1)
 	}
 }
 
