@@ -49,15 +49,13 @@ func main() {
 	defer outconn.Close()
 
 	var (
-		stats               statsdClient = &statsd.NoOpClient{}
 		inbytes, outbytes   int64
 		inerrors, outerrors int64
 	)
 	if !*nostats {
-		stats, err = statsd.New(*out)
+		stats, err := statsd.New(*out)
 		if err != nil {
 			log.Printf("Statsd disabled: %v", err)
-			stats = &statsd.NoOpClient{}
 		} else {
 			go func() {
 				tick := time.NewTicker(10 * time.Second)
@@ -90,8 +88,4 @@ func main() {
 		}
 		atomic.AddInt64(&outbytes, int64(nout))
 	}
-}
-
-type statsdClient interface {
-	Count(name string, value int64, tags []string, rate float64) error
 }
