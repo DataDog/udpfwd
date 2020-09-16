@@ -82,13 +82,13 @@ func main() {
 			atomic.AddInt64(&inerrors, 1)
 			log.Printf("Error reading %d bytes: %v", nin, err)
 		}
-		atomic.AddInt64(&inbytes, 1)
+		atomic.AddInt64(&inbytes, int64(nin))
 		nout, err := outconn.Write(buf[:nin])
 		if err != nil {
 			atomic.AddInt64(&outerrors, 1)
 			log.Printf("Error writing %d bytes: %v", nout, err)
 		}
-		atomic.AddInt64(&outbytes, 1)
+		atomic.AddInt64(&outbytes, int64(nout))
 	}
 }
 
