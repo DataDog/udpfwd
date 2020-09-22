@@ -60,3 +60,13 @@ load(
 )
 
 _go_image_repos()
+
+load("@io_bazel_rules_docker//container:container.bzl", "container_pull")
+
+container_pull(
+    name = "io_docker_debian_stable_slim",
+    # tag = "stable-slim",
+    digest = "sha256:936c0b9d0689a05370b4b5409a0cff767442f6f3795465add690a2ddf0a727a1",
+    registry = "docker.io",
+    repository = "debian",
+)
