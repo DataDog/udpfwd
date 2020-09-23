@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = net.ResolveUnixAddr("unix", *out)
+	_, err = net.ResolveUnixAddr("unixgram", *out)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer inconn.Close()
-	outconn, err := net.Dial("unix", *out)
+	outconn, err := net.Dial("unixgram", *out)
 	if err != nil {
 		log.Fatal(err)
 	}
