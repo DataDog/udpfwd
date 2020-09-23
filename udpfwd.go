@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	outaddr, err := net.ResolveUDPAddr("udp", *out)
+	_, err = net.ResolveUnixAddr("unix", *out)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer inconn.Close()
-	outconn, err := net.DialUDP("udp", nil, outaddr)
+	outconn, err := net.Dial("unix", *out)
 	if err != nil {
 		log.Fatal(err)
 	}
