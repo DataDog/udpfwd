@@ -53,7 +53,7 @@ func main() {
 		inerrors, outerrors int64
 	)
 	if !*nostats {
-		stats, err := statsd.New(*out)
+		stats, err := statsd.New("unix://" + *out)
 		if err != nil {
 			log.Printf("Statsd disabled: %v", err)
 		} else {
