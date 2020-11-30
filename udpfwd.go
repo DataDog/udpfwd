@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -83,6 +84,9 @@ func main() {
 		atomic.AddInt64(&inbytes, int64(nin))
 		nout, err := outconn.Write(buf[:nin])
 		if err != nil {
+			if strings.Contains(err.Error(), "transport endpoint is not connected") {
+				log.Fatal(err)
+			}
 			atomic.AddInt64(&outerrors, 1)
 			log.Printf("Error writing %d bytes: %v", nout, err)
 		}
